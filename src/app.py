@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Character, Planet, Favorites
 #from models import Person
 
 app = Flask(__name__)
@@ -36,14 +36,76 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+# /users endpoints
+@app.route('/users', methods=['GET'])
+def all_users():
+    users = User()
+    users = users.query.all()
+    users = list(map(lambda item: item.serialize(), users))
+    return jsonify(users), 200
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/users/<int:user_id>', methods=['GET'])
+def handle_hello(user_id = None):
+    user = User()
+    if user_id is not None:
+        user = user.query.get(user_id)
+        if user is not None:
+            return jsonify(user.serialize()), 200
+        else:
+            return jsonify({"message":"Not found"}), 404
 
-    return jsonify(response_body), 200
+@app.route('/users/<int:id>/favorites', methods=['GET'])
+def get_user_favorites(id):
+    favorites = Favorites()
+    favorites = favorites.query.filter_by(user_id = id).all()
+    favorites = list(map(lambda item: item.serialize(), favorites))
+    try:
+        return jsonify(favorites), 200
+    except Exception as error:
+        return jsonify({"message":"error"}), 400
+
+@app.route('/users/<int:u_id>/favorites/<int:p_id>', methods=['POST'])
+def add_favorite_people(u_id = None, p_id = None):
+    if u_id is not None and p_id is not None:
+        favorite = Favorites(people_id = p_id, user_id = u_id)
+        db.session.add(favorite)
+        db.session.commit()
+    print(u_id, p_id)
+    return "hi"
+
+# /people endpoints
+@app.route('/people', methods=['GET'])
+def get_people():
+    people = Character()
+    people = people.query.all()
+    people = list(map(lambda item: item.serialize(), people))
+    return jsonify(people), 200
+
+@app.route('/people/<int:person_id>', methods=['GET'])
+def get_person(person_id = None):
+    try:
+        people = Character()
+        people = people.query.get(person_id)
+        return jsonify(people.serialize()), 200
+    except Exception as error:
+        return jsonify({"message":"Character not found"}), 404
+
+# /planets endpoints
+@app.route('/planets', methods=['GET'])
+def get_planets():
+    planet = Planet()
+    planet = planet.query.all()
+    planet = list(map(lambda item: item.serialize(), planet))
+    return jsonify(planet), 200
+
+@app.route('/planets/<int:planet_id>', methods=['GET'])
+def get_planet(planet_id = None):
+    try:
+        planet = Planet()
+        planet = planet.query.get(planet_id)
+        return jsonify(planet.serialize()), 200
+    except Exception as error:
+        return jsonify({"message":"Planet not found"}), 404
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
