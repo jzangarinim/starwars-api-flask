@@ -4,7 +4,6 @@ from datetime import datetime
 db = SQLAlchemy()
 
 class User(db.Model):
-    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
@@ -25,7 +24,6 @@ class User(db.Model):
         }
 
 class Character(db.Model):
-    __tablename__ = 'character'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     eye_color = db.Column(db.String(20), nullable=False)
@@ -45,7 +43,6 @@ class Character(db.Model):
         }
 
 class Planet(db.Model):
-    __tablename__ = 'planet'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
     climate = db.Column(db.String(50), nullable=False)
@@ -64,7 +61,6 @@ class Planet(db.Model):
         }
 
 class Favorites(db.Model):
-    __tablename__ = 'favorites'
     id = db.Column(db.Integer, primary_key=True)
     people_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=True)
     planet_id = db.Column(db.Integer, db.ForeignKey('planet.id'), nullable=True)
