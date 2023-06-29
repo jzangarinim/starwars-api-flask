@@ -37,7 +37,7 @@ def sitemap():
     return generate_sitemap(app)
 
 # /users ENDPOINTS
-# get ALL users
+# GET ALL users
 @app.route('/users', methods=['GET'])
 def all_users():
     users = User()
@@ -45,7 +45,7 @@ def all_users():
     users = list(map(lambda item: item.serialize(), users))
     return jsonify(users), 200
 
-# get ONE user
+# GET ONE user
 @app.route('/users/<int:user_id>', methods=['GET'])
 def handle_hello(user_id = None):
     user = User()
@@ -57,7 +57,7 @@ def handle_hello(user_id = None):
             return jsonify({"message":"Not found"}), 404
 
 # /users/favorites ENDPOINTS
-# get ALL favorites of ONE user
+# GET ALL favorites of ONE user
 @app.route('/users/<int:id>/favorites', methods=['GET'])
 def get_user_favorites(id):
     favorites = Favorites()
@@ -68,7 +68,7 @@ def get_user_favorites(id):
     except Exception as error:
         return jsonify({"message":"error"}), 400
 
-# ADD ONE favorite person/planet to ONE user
+# POST ONE favorite person/planet to ONE user
 @app.route('/users/<int:u_id>/favorites/<nature>/<int:p_id>', methods=['POST'])
 def add_favorite(nature, u_id = None,  p_id = None):
     if u_id is not None and p_id is not None:
@@ -102,7 +102,7 @@ def add_favorite(nature, u_id = None,  p_id = None):
             return jsonify({"message":"Nature not recognized"}), 400
     return "Favorite added successfully!", 200
 
-# delete ONE person/planet from ONE user's favorites list
+# DELETE ONE person/planet from ONE user's favorites list
 @app.route('/users/<int:u_id>/favorites/<nature>/<int:p_id>', methods=['DELETE'])
 def delete_favorite(nature, u_id = None,  p_id = None):
     if u_id is not None and p_id is not None:
@@ -135,7 +135,7 @@ def delete_favorite(nature, u_id = None,  p_id = None):
     return "Favorite removed successfully!", 200
 
 # /people endpoints
-# get ALL people
+# GET ALL people
 @app.route('/people', methods=['GET'])
 def get_people():
     people = Character()
@@ -143,16 +143,17 @@ def get_people():
     people = list(map(lambda item: item.serialize(), people))
     return jsonify(people), 200
 
+# POST ONE person
 @app.route('/people', methods=['POST'])
 def add_person():
     data = request.json
     aux = Character()
     aux = aux.query.filter_by(name=data["name"], eye_color=data["eye_color"], hair_color=data["hair_color"], height=data["height"], mass=data["mass"]).first()
+    for key, value in data.items():
+        if value is None or value == "":
+            return f"Invalid/missing value in property: {key}", 400
     if aux is not None:
         return "Character already exists", 400
-    for key, value in data.items():
-        if value is None or value is "":
-            return f"Invalid/missing value in property: {key}", 400
     else:
         people = Character()
         people = Character(name=data["name"], eye_color=data["eye_color"], hair_color=data["hair_color"], height=data["height"], mass=data["mass"])
@@ -164,7 +165,7 @@ def add_person():
             return jsonify({"message":"error"}), 400
     return "Character added successfully!", 200
 
-# get ONE person
+# GET ONE person
 @app.route('/people/<int:person_id>', methods=['GET'])
 def get_person(person_id = None):
     try:
@@ -175,7 +176,7 @@ def get_person(person_id = None):
         return jsonify({"message":"Character not found"}), 404
 
 # /planets endpoints
-# get ALL planets
+# GET ALL planets
 @app.route('/planets', methods=['GET'])
 def get_planets():
     planet = Planet()
@@ -183,7 +184,30 @@ def get_planets():
     planet = list(map(lambda item: item.serialize(), planet))
     return jsonify(planet), 200
 
-# get ONE planet
+# POST ONE planet
+@app.route('/planets', methods=['POST'])
+def add_planet():
+    data = request.json
+    print(data)
+    aux = Planet()
+    aux = aux.query.filter_by(name=data["name"], climate=data["climate"], terrain=data["terrain"], population=data["population"]).first()
+    for key, value in data.items():
+        if value is None or value == "":
+            return f"Invalid/missing value in property: {key}", 400
+    if aux is not None:
+        return "Planet already exists", 400
+    else:
+        planet = Planet()
+        planet = Planet(name=data["name"], climate=data["climate"], terrain=data["terrain"], population=data["population"])
+        db.session.add(planet)
+        try:
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            return jsonify({"message":"error"}), 400
+    return "Planet added successfully!", 200
+
+# GET ONE planet
 @app.route('/planets/<int:planet_id>', methods=['GET'])
 def get_planet(planet_id = None):
     try:

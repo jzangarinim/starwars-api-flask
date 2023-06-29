@@ -50,7 +50,7 @@ class Planet(db.Model):
     name = db.Column(db.String(50), nullable=False)
     climate = db.Column(db.String(50), nullable=False)
     terrain = db.Column(db.String(50), nullable=False)
-    population = db.Column(db.String(50), nullable=False)
+    population = db.Column(db.Integer, nullable=False)
     favorites = db.relationship('Favorites', backref='planet', lazy=True)
 
     def __repr__(self):
