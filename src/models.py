@@ -39,7 +39,10 @@ class Character(db.Model):
         return {
             "id":self.id,
             "name":self.name,
-            "eye_color":self.eye_color
+            "eye_color":self.eye_color,
+            "hair_color":self.hair_color,
+            "height":self.height,
+            "mass":self.mass
         }
 
 class Planet(db.Model):
@@ -57,6 +60,8 @@ class Planet(db.Model):
         return {
             "id":self.id,
             "name":self.name,
+            "climate":self.climate,
+            "terrain":self.terrain,
             "population":self.population
         }
 

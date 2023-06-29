@@ -68,23 +68,71 @@ def get_user_favorites(id):
     except Exception as error:
         return jsonify({"message":"error"}), 400
 
-# ADD ONE favorite person to ONE user
-@app.route('/users/<int:u_id>/favorites/people/<int:p_id>', methods=['POST'])
-def add_favorite_people(u_id = None, p_id = None):
+# ADD ONE favorite person/planet to ONE user
+@app.route('/users/<int:u_id>/favorites/<nature>/<int:p_id>', methods=['POST'])
+def add_favorite(nature, u_id = None,  p_id = None):
     if u_id is not None and p_id is not None:
-        aux = Favorites()
-        aux = aux.query.filter_by(user_id = u_id, people_id = p_id).first()
-        if aux is None:
-            favorite = Favorites(people_id = p_id, user_id = u_id)
-            db.session.add(favorite)
-            try:
-                db.session.commit()
-            except Exception as error:
-                db.session.rollback()
-                return jsonify({"message":"error"}), 400
+        if nature == 'people':
+            aux = Favorites()
+            aux = aux.query.filter_by(user_id = u_id, people_id = p_id).first()
+            if aux is None:
+                favorite = Favorites(people_id = p_id, user_id = u_id)
+                db.session.add(favorite)
+                try:
+                    db.session.commit()
+                except Exception as error:
+                    db.session.rollback()
+                    return jsonify({"message":"error"}), 400
+            else:
+                return "Favorite character already exists in user's list", 200
+        elif nature == 'planets':
+            aux = Favorites()
+            aux = aux.query.filter_by(user_id = u_id, planet_id = p_id).first()
+            if aux is None:
+                favorite = Favorites(planet_id = p_id, user_id = u_id)
+                db.session.add(favorite)
+                try:
+                    db.session.commit()
+                except Exception as error:
+                    db.session.rollback()
+                    return jsonify({"message":"error"}), 400
+            else:
+                return "Favorite already exists in user's list", 200
         else:
-            return "Favorite character already exists in user's list", 200
-    return "Favorite character added successfully!", 200
+            return jsonify({"message":"Nature not recognized"}), 400
+    return "Favorite added successfully!", 200
+
+# delete ONE person/planet from ONE user's favorites list
+@app.route('/users/<int:u_id>/favorites/<nature>/<int:p_id>', methods=['DELETE'])
+def delete_favorite(nature, u_id = None,  p_id = None):
+    if u_id is not None and p_id is not None:
+        if nature == 'people':
+            favorite = Favorites()
+            favorite = favorite.query.filter_by(user_id = u_id, people_id = p_id).first()
+            if favorite is not None:
+                db.session.delete(favorite)
+                try:
+                    db.session.commit()
+                except Exception as error:
+                    db.session.rollback()
+                    return jsonify({"message":"error"}), 400
+            else:
+                return "Character not found in user's favorites list", 200
+        elif nature == 'planets':
+            favorite = Favorites()
+            favorite = favorite.query.filter_by(user_id = u_id, planet_id = p_id).first()
+            if favorite is not None:
+                db.session.delete(favorite)
+                try:
+                    db.session.commit()
+                except Exception as error:
+                    db.session.rollback()
+                    return jsonify({"message":"error"}), 400
+            else:
+                return "Planet not found in user's favorites list", 200
+        else:
+            return jsonify({"message":"Nature not recognized"}), 400
+    return "Favorite removed successfully!", 200
 
 # /people endpoints
 # get ALL people
@@ -94,6 +142,27 @@ def get_people():
     people = people.query.all()
     people = list(map(lambda item: item.serialize(), people))
     return jsonify(people), 200
+
+@app.route('/people', methods=['POST'])
+def add_person():
+    data = request.json
+    aux = Character()
+    aux = aux.query.filter_by(name=data["name"], eye_color=data["eye_color"], hair_color=data["hair_color"], height=data["height"], mass=data["mass"]).first()
+    if aux is not None:
+        return "Character already exists", 400
+    for key, value in data.items():
+        if value is None or value is "":
+            return f"Invalid/missing value in property: {key}", 400
+    else:
+        people = Character()
+        people = Character(name=data["name"], eye_color=data["eye_color"], hair_color=data["hair_color"], height=data["height"], mass=data["mass"])
+        db.session.add(people)
+        try:
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            return jsonify({"message":"error"}), 400
+    return "Character added successfully!", 200
 
 # get ONE person
 @app.route('/people/<int:person_id>', methods=['GET'])
